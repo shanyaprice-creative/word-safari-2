@@ -2,94 +2,919 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Word Safari</title>
+<title>Word Wizard: Jungle Safari Adventure</title>
 <style>
+  * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: 'Comic Sans MS', sans-serif;
-    background: linear-gradient(#bfe6c9, #f4e6b0);
-    text-align: center;
-  }
-  #game-container {
-    position: relative;
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-    background-image: url('generated-image-6.png');
-    background-size: cover;
-    background-position: center;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  }
-  h1 {
-    color: #2e5d34;
-    text-shadow: 1px 1px 2px white;
-    padding-top: 20px;
-  }
-  #animal-stage {
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, #1b4d2e 0%, #2e7d32 40%, #3e8e41 100%);
+    min-height: 100vh;
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 30px;
-    padding: 30px 10px;
-    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+    overflow-x: hidden;
   }
-  .animal {
-    width: 150px;
-    transition: transform 0.3s;
-    cursor: pointer;
+  #game {
+    background: #fffaf0;
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    max-width: 700px;
+    width: 100%;
+    padding: 30px;
+    position: relative;
+    border: 6px solid #8d6e63;
+    overflow: hidden;
   }
-  .animal:hover {
-    transform: scale(1.1);
+  h1 { text-align: center; color: #33691e; margin-top: 0; font-size: 1.8em; }
+  #subtitle { text-align: center; color: #558b2f; margin-bottom: 20px; font-size: 0.95em; }
+
+  /* ===== Animated intro canopy ===== */
+  #introCanopy {
+    position: relative; height: 130px; margin: -10px -10px 10px -10px; border-radius: 18px;
+    background: linear-gradient(180deg, #a5d6a7 0%, #e8f5e9 100%); overflow: hidden;
   }
-  .flip {
-    transform: scaleX(-1);
+  .sun { position:absolute; top:10px; right:20px; font-size:2.6em; animation: pulse 3s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+  .leaf { position:absolute; font-size:2.2em; animation: sway 3.5s ease-in-out infinite; }
+  .leaf.l1 { top:-10px; left:-10px; animation-delay:0s; }
+  .leaf.l2 { top:-14px; right:-10px; animation-delay:0.6s; transform: scaleX(-1); }
+  .leaf.l3 { top:-10px; left:35%; animation-delay:1.2s; font-size:1.8em; }
+  @keyframes sway { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+  .flit { position:absolute; font-size:1.4em; animation: flitmove 6s linear infinite; }
+  .flit.f1 { top:70px; animation-delay:0s; }
+  .flit.f2 { top:95px; font-size:1.1em; animation-delay:3s; }
+  @keyframes flitmove { 0% { left:-10%; } 100% { left:110%; } }
+  .bounceChar { position:absolute; bottom:6px; left:50%; transform:translateX(-50%); font-size:3em; animation: bounceIn 0.8s ease; }
+  @keyframes bounceIn { 0% { transform: translate(-50%, 60px) scale(0.5); opacity:0; } 60% { transform: translate(-50%, -8px) scale(1.1); opacity:1; } 100% { transform: translate(-50%, 0) scale(1); } }
+
+  #hud {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #dcedc8; border-radius: 14px; padding: 10px 18px;
+    margin-bottom: 14px; font-weight: bold; color: #33691e; font-size: 0.9em;
+    flex-wrap: wrap; gap: 6px;
   }
-  #word-box {
-    background: white;
-    display: inline-block;
-    padding: 15px 30px;
-    border-radius: 12px;
-    font-size: 28px;
-    font-weight: bold;
-    color: #444;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    margin-bottom: 30px;
+  #trailMapOuter { background: #c8e6c9; border-radius: 14px; padding: 14px 10px; margin-bottom: 18px; overflow-x: auto; white-space: nowrap; }
+  #trailMap { display: inline-flex; align-items: center; gap: 4px; }
+  .trail-stop { display: inline-flex; flex-direction: column; align-items: center; width: 42px; position: relative; }
+  .trail-stop .stone {
+    width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 1.1em; background: #a5d6a7; border: 2px solid #81c784; transition: background 0.3s;
   }
-  #percy {
-    width: 90px;
-    position: absolute;
-    bottom: 10px;
-    right: 20px;
+  .trail-stop.done .stone { background: #66bb6a; border-color: #388e3c; color: white; }
+  .trail-stop.current .stone { background: #ff8f00; border-color: #e65100; color: white; box-shadow: 0 0 0 4px rgba(255,143,0,0.3); }
+  .trail-stop.hidden .stone { background: #e0e0e0; border-color: #bdbdbd; opacity: 0.5; }
+  .trail-connector { width: 14px; height: 3px; background: #81c784; flex-shrink: 0; }
+  .trail-connector.done { background: #388e3c; }
+  #roundLabel { display: inline-block; background: #ff8f00; color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.85em; font-weight: bold; margin-bottom: 10px; }
+  #retryBadge { display: none; background: #8e24aa; color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.8em; font-weight: bold; margin-bottom: 10px; margin-left: 6px; }
+  #questionArea { text-align: center; min-height: 220px; }
+  #questionText { font-size: 1.35em; color: #3e2723; margin: 16px 0; font-weight: bold; }
+  #promptEmoji { font-size: 3em; margin-bottom: 10px; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .choice-btn {
+    background: #a5d6a7; border: 3px solid #388e3c; border-radius: 14px;
+    padding: 14px 10px; font-size: 1.1em; font-weight: bold; color: #1b5e20;
+    cursor: pointer; transition: transform 0.12s, background 0.15s;
   }
+  .choice-btn:hover { transform: scale(1.04); background: #c8e6c9; }
+  .choice-btn:active { transform: scale(0.94); }
+  .choice-btn.correct { background: #66bb6a !important; color: white !important; }
+  .choice-btn.wrong { background: #ef5350 !important; color: white !important; border-color: #c62828; }
+  #textInputArea input { font-size: 1.3em; padding: 10px 14px; border: 3px solid #8d6e63; border-radius: 10px; width: 70%; text-align: center; margin-top: 10px; }
+  #textInputArea button, .action-btn {
+    background: #ff8f00; color: white; border: none; padding: 12px 24px;
+    border-radius: 12px; font-size: 1.05em; font-weight: bold; cursor: pointer;
+    margin-top: 14px; margin-left: 8px; transition: transform 0.12s;
+  }
+  .action-btn:hover, #textInputArea button:hover { background: #f57c00; }
+  .action-btn:active, #textInputArea button:active { transform: scale(0.93); }
+  .action-btn.secondary { background: #558b2f; } .action-btn.secondary:hover { background: #33691e; }
+  .action-btn.retry { background: #8e24aa; } .action-btn.retry:hover { background: #6a1b9a; }
+  .action-btn.shop { background: #0288d1; } .action-btn.shop:hover { background: #01579b; }
+  .action-btn.stats { background: #6d4c41; } .action-btn.stats:hover { background: #4e342e; }
+  .action-btn.big { font-size: 1.3em; padding: 16px 34px; border-radius: 18px; box-shadow: 0 6px 0 #c76a00; }
+  .action-btn.big:active { box-shadow: 0 2px 0 #c76a00; transform: translateY(4px) scale(0.97); }
+  #speakBtn { background: #689f38; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 0.95em; margin-bottom: 8px; }
+  #feedback { margin-top: 16px; font-size: 1.05em; font-weight: bold; min-height: 28px; }
+  #feedback.correct-fb { color: #2e7d32; } #feedback.wrong-fb { color: #c62828; }
+  #reteachBox { display: none; background: #fff3e0; border: 2px dashed #ff8f00; border-radius: 12px; padding: 12px 16px; margin-top: 12px; text-align: left; color: #4e342e; font-size: 0.95em; font-weight: normal; }
+  #startScreen, #endScreen, #nameScreen, #shopScreen, #statsScreen { text-align: center; }
+  #startScreen p, #endScreen p, #nameScreen p, #shopScreen p, #statsScreen p { color: #4e342e; font-size: 1.05em; line-height: 1.5; }
+  .big-emoji { font-size: 4em; margin: 10px 0; }
+  #hidden-word-display { font-size: 1.5em; letter-spacing: 2px; color: #33691e; font-weight: bold; margin: 14px 0; }
+  .vine { text-align:center; font-size: 1.5em; margin-bottom: 4px; }
+
+  /* ===== Redesigned name screen ===== */
+  #nameHeadline { font-size: 1.6em; font-weight: 900; color: #e65100; margin: 8px 0 4px 0; }
+  #nameSubline { font-size: 1em; color: #558b2f; margin-bottom: 16px; }
+  #nameCard {
+    background: linear-gradient(180deg, #fff8e1 0%, #ffecb3 100%); border: 4px solid #ffb300;
+    border-radius: 22px; padding: 22px 20px; margin: 0 auto; max-width: 380px;
+  }
+  #nameInput {
+    font-size: 1.5em; padding: 14px 16px; border: 4px solid #8d6e63; border-radius: 16px;
+    width: 100%; text-align: center; margin: 10px 0; font-weight: bold; color: #4e342e;
+  }
+  #nameInput::placeholder { color: #bcaaa4; font-weight: normal; font-size: 0.75em; }
+  #nameError { color: #c62828; font-weight: bold; min-height: 20px; }
+
+  /* ===== Redesigned tier tiles ===== */
+  .tier-select { display: flex; gap: 14px; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
+  .tier-btn {
+    background: #fff3e0; border: 4px solid #ff8f00; border-radius: 20px;
+    padding: 16px 14px; cursor: pointer; width: 165px; transition: transform 0.15s, background 0.15s;
+    box-shadow: 0 4px 0 #e65100;
+  }
+  .tier-btn:hover { transform: translateY(-3px) scale(1.03); background: #ffe0b2; }
+  .tier-btn:active { transform: translateY(2px) scale(0.98); box-shadow: 0 1px 0 #e65100; }
+  .tier-btn.selected { background: #ffb74d; border-color: #e65100; transform: scale(1.05); }
+  .tier-emoji { font-size: 2.6em; }
+  .tier-name { font-weight: 900; color: #5d4037; margin-top: 6px; font-size: 1.05em; }
+  .tier-desc { font-size: 0.78em; color: #795548; margin-top: 4px; }
+  #tierBadge { display: inline-block; background: #6d4c41; color: white; padding: 3px 12px; border-radius: 12px; font-size: 0.8em; }
+  #resultsTable, #historyTable { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.9em; }
+  #resultsTable td, #historyTable td, #historyTable th { padding: 6px 10px; text-align: left; border-bottom: 1px solid #dcedc8; color: #4e342e; }
+  #resultsTable td:first-child { font-weight: bold; color: #33691e; }
+  #historyTable th { background: #dcedc8; color: #33691e; }
+  #playerNameBadge { background: #33691e; color: white; padding: 3px 12px; border-radius: 12px; font-size: 0.8em; }
+  #gemWalletBadge { background: #ff8f00; color: white; padding: 3px 12px; border-radius: 12px; font-size: 0.8em; }
+  .shop-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 20px 0; }
+  .shop-item { background: #fff3e0; border: 3px solid #ffb74d; border-radius: 16px; padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .shop-item.owned { border-color: #66bb6a; background: #e8f5e9; }
+  .shop-item.equipped { border-color: #0288d1; background: #e1f5fe; }
+  .shop-item-emoji { font-size: 2.2em; }
+  .shop-item-name { font-weight: bold; color: #5d4037; font-size: 0.85em; text-align: center; }
+  .shop-item-btn { background: #ff8f00; color: white; border: none; padding: 6px 12px; border-radius: 10px; font-size: 0.8em; font-weight: bold; cursor: pointer; margin-top: 4px; }
+  .shop-item-btn:disabled { background: #bdbdbd; cursor: not-allowed; }
+  .shop-item-btn.equipped-btn { background: #0288d1; }
+  .stat-box { display: inline-block; background: #dcedc8; border-radius: 14px; padding: 10px 18px; margin: 6px; color: #33691e; font-weight: bold; }
+
+  #speechBubbleWrap, #speechBubbleWrapEnd { display: none; align-items: flex-start; gap: 10px; margin: 10px 0 16px 0; text-align: left; animation: popIn 0.3s ease; }
+  @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  #muteToggle { background: none; border: 2px solid #558b2f; color: #558b2f; border-radius: 20px; padding: 3px 10px; font-size: 0.75em; cursor: pointer; margin-left: 6px; }
+  #muteToggle.muted { border-color: #bdbdbd; color: #bdbdbd; }
 </style>
 </head>
 <body>
-
-<div id="game-container">
-  <h1>🌿 Word Safari 🌿</h1>
-
-  <div id="animal-stage">
-    <img src="generated-image.png" alt="Zebra" class="animal" id="zebra" onclick="sayWord('Zebra')">
-    <img src="generated-image-2.png" alt="Monkey" class="animal flip" id="monkey" onclick="sayWord('Monkey')">
-    <img src="generated-image-3.png" alt="Lion" class="animal flip" id="lion" onclick="sayWord('Lion')">
-    <img src="generated-image-4.png" alt="Elephant" class="animal" id="elephant" onclick="sayWord('Elephant')">
+<div id="game">
+  <div class="vine">🦁🌴🐘 &nbsp; Word Wizard: Jungle Safari Adventure &nbsp; 🐘🌴🦁
+    <button id="muteToggle" onclick="toggleMute()">🔊 Voices On</button>
   </div>
 
-  <div id="word-box">Tap an animal!</div>
+  <div id="nameScreen">
+    <div id="introCanopy">
+      <span class="sun">☀️</span>
+      <span class="leaf l1">🌿</span><span class="leaf l2">🌿</span><span class="leaf l3">🍃</span>
+      <span class="flit f1">🦋</span><span class="flit f2">🐦</span>
+      <span class="bounceChar">🧑‍🌾</span>
+    </div>
+    <div id="nameHeadline">Hi there, explorer! 🎉</div>
+    <div id="nameSubline">What's your name?</div>
+    <div id="nameCard">
+      <input type="text" id="nameInput" placeholder="Type your name here" maxlength="30">
+      <div id="nameError"></div>
+      <button class="action-btn big" onclick="submitName()">Let's Go! 🚀</button>
+    </div>
+  </div>
 
-  <img id="percy" src="generated-image-5.png" alt="Percy the Parrot">
+  <div id="startScreen" style="display:none;">
+    <div id="speechBubbleWrap">
+      <div id="speakerEmoji" style="font-size:2.6em; flex-shrink:0;">🧑‍🌾</div>
+      <div id="speechBubble" style="background:white; border:3px solid #33691e; border-radius:16px; padding:10px 14px; font-size:0.95em; color:#3e2723; flex:1;"></div>
+    </div>
+    <div class="big-emoji" id="startEmoji">🦜🐆🌿</div>
+    <p id="walletInfo" style="font-weight:bold; color:#e65100;"></p>
+    <div id="nameHeadline" style="font-size:1.3em;">Pick your trail! 🗺️</div>
+    <div class="tier-select" id="tierSelect">
+      <div class="tier-btn" data-tier="easy" onclick="selectTier('easy')">
+        <div class="tier-emoji">🐣</div>
+        <div class="tier-name">Cub Trail</div>
+        <div class="tier-desc">Easy & fun with hints</div>
+      </div>
+      <div class="tier-btn" data-tier="medium" onclick="selectTier('medium')">
+        <div class="tier-emoji">🐒</div>
+        <div class="tier-name">Ranger Trail</div>
+        <div class="tier-desc">Just right challenge</div>
+      </div>
+      <div class="tier-btn" data-tier="hard" onclick="selectTier('hard')">
+        <div class="tier-emoji">🦁</div>
+        <div class="tier-name">Lion Trail</div>
+        <div class="tier-desc">Extra tricky, brave explorers only!</div>
+      </div>
+    </div>
+    <button class="action-btn big" id="startBtn" onclick="startGame()" disabled>Start Adventure! 🌟</button>
+    <br>
+    <button class="action-btn shop" onclick="openShop()">🛍️ Gem Shop</button>
+    <button class="action-btn stats" onclick="openStats()">📊 My Stats</button>
+  </div>
+
+  <div id="shopScreen" style="display:none;">
+    <div class="big-emoji">💎🛍️</div>
+    <h2 style="color:#33691e;">Gem Shop</h2>
+    <p>Spend your gems on companions and trail looks! Your gems and unlocks are saved for next time.</p>
+    <p><span id="gemWalletBadgeShop" class="shop-item-btn" style="background:#ff8f00; display:inline-block;"></span></p>
+    <h3 style="color:#5d4037;">🐾 Trail Companions</h3>
+    <div class="shop-grid" id="companionShopGrid"></div>
+    <h3 style="color:#5d4037;">🎨 Trail Themes</h3>
+    <div class="shop-grid" id="themeShopGrid"></div>
+    <button class="action-btn secondary" onclick="closeShop()">⬅️ Back</button>
+  </div>
+
+  <div id="statsScreen" style="display:none;">
+    <div class="big-emoji">📊🌴</div>
+    <h2 style="color:#33691e;">My Stats</h2>
+    <div id="statsSummary"></div>
+    <table id="historyTable"></table>
+    <br>
+    <button class="action-btn secondary" onclick="closeStats()">⬅️ Back</button>
+  </div>
+
+  <div id="hud" style="display:none;">
+    <span id="playerNameBadge"></span>
+    <span id="gemWalletBadge">💎 0</span>
+    <span>🌟 <span id="streakDisplay">0</span></span>
+    <span>❓ <span id="qNumDisplay">1</span>/<span id="qTotalDisplay">15</span></span>
+    <span id="tierBadge"></span>
+  </div>
+
+  <div id="trailMapOuter" style="display:none;"><div id="trailMap"></div></div>
+
+  <div id="questionArea" style="display:none;">
+    <div id="roundLabel"></div>
+    <span id="retryBadge">🔁 Retry — you've got this!</span>
+    <div id="promptEmoji"></div>
+    <div id="questionText"></div>
+    <div id="hidden-word-display"></div>
+    <button id="speakBtn" style="display:none;" onclick="speakWord()">🔊 Hear the word</button>
+    <div id="choicesArea" class="choices"></div>
+    <div id="textInputArea" style="display:none;">
+      <br><input type="text" id="typedAnswer" autocomplete="off" placeholder="Type the word...">
+      <button onclick="checkTyped()">Submit</button>
+    </div>
+    <div id="feedback"></div>
+    <div id="reteachBox"></div>
+  </div>
+
+  <div id="endScreen" style="display:none;">
+    <div id="speechBubbleWrapEnd"></div>
+    <div class="big-emoji" id="endEmoji">🏆</div>
+    <h2 id="endTitle" style="color:#33691e;"></h2>
+    <p id="endSummary"></p>
+    <table id="resultsTable"></table>
+    <br>
+    <button class="action-btn shop" onclick="goToShopFromEnd()">🛍️ Visit Gem Shop</button>
+    <button class="action-btn" onclick="downloadResults()">⬇️ Download My Results</button>
+    <button class="action-btn secondary" onclick="location.reload()">Play Again 🔁</button>
+    <p style="font-size:0.85em; color:#795548; margin-top:14px;">
+      Save this file to your class folder, or show it to your teacher so they can see how you did today!
+    </p>
+  </div>
 </div>
 
 <script>
-function sayWord(word) {
-  document.getElementById('word-box').innerText = word;
-  const utterance = new SpeechSynthesisUtterance(word);
-  utterance.rate = 0.9;
-  speechSynthesis.speak(utterance);
-}
-</script>
+/* ===================== SHOP CATALOG ===================== */
+const companions = [
+  { id:"none", name:"No Companion", emoji:"—", cost:0 },
+  { id:"parrot", name:"Percy the Parrot", emoji:"🦜", cost:15 },
+  { id:"monkey", name:"Mango the Monkey", emoji:"🐒", cost:25 },
+  { id:"elephant", name:"Ellie the Elephant", emoji:"🐘", cost:40 },
+  { id:"tiger", name:"Tara the Tiger", emoji:"🐅", cost:60 },
+  { id:"gorilla", name:"Gus the Gorilla", emoji:"🦍", cost:80 },
+];
+const themes = [
+  { id:"classic", name:"Classic Jungle", emoji:"🌴", cost:0, bg:"linear-gradient(180deg, #1b4d2e 0%, #2e7d32 40%, #3e8e41 100%)" },
+  { id:"sunset", name:"Sunset Safari", emoji:"🌅", cost:30, bg:"linear-gradient(180deg, #ff7043 0%, #ff8a65 40%, #ffab91 100%)" },
+  { id:"rainy", name:"Rainy Jungle", emoji:"🌧️", cost:45, bg:"linear-gradient(180deg, #37474f 0%, #546e7a 40%, #78909c 100%)" },
+  { id:"starry", name:"Starry Night Jungle", emoji:"🌌", cost:70, bg:"linear-gradient(180deg, #0d1b2a 0%, #1b263b 40%, #415a77 100%)" },
+];
 
+/* ===================== TALKING CHARACTER LINES ===================== */
+const samLines = {
+  welcomeBack: (name, gems) => `Welcome back, ${name}! You've got ${gems} gems saved up from your last trek. Ready to explore again?`,
+  welcomeNew: (name) => `Welcome, ${name}! I'm Safari Guide Sam. Pick a trail below and let's start exploring the jungle together!`,
+  gameStart: (tier) => `Great choice! Let's head down the ${tier} together. I'll be cheering you on the whole way!`,
+  streak3: "Wow, three in a row! You're on fire, explorer!",
+  streak5: "FIVE in a row?! You're a true jungle word wizard!",
+  afterRetrySuccess: "That's it! You fixed it — that's exactly how real explorers learn, by trying again!",
+  encourageAfterMiss: "No worries, every explorer stumbles sometimes. Let's figure this one out together.",
+  finalHigh: (name) => `${name}, that was an AMAZING trek! You really know your way around this jungle now!`,
+  finalMid: (name) => `Nice work out there, ${name}! A few tricky spots, but you pushed through like a real ranger.`,
+  finalLow: (name) => `You made it through the whole trail, ${name}! Every trek makes you stronger — let's go again soon!`,
+};
+
+let muted = false;
+function toggleMute(){
+  muted = !muted;
+  const btn = document.getElementById('muteToggle');
+  if(muted){ btn.textContent = "🔇 Voices Off"; btn.classList.add('muted'); window.speechSynthesis.cancel(); }
+  else { btn.textContent = "🔊 Voices On"; btn.classList.remove('muted'); }
+}
+function speakLine(text){
+  if(muted || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 0.95; utter.pitch = 1.1;
+  window.speechSynthesis.speak(utter);
+}
+function showSpeechBubble(wrapId, emoji, text, speak=true){
+  const wrap = document.getElementById(wrapId);
+  wrap.style.display = 'flex';
+  wrap.innerHTML = `<div style="font-size:2.6em; flex-shrink:0;">${emoji}</div><div style="background:white; border:3px solid #33691e; border-radius:16px; padding:10px 14px; font-size:0.95em; color:#3e2723; flex:1;">${text}</div>`;
+  if(speak) speakLine(text);
+}
+function currentCompanionEmoji(){
+  const c = companions.find(c => c.id === playerData.equippedCompanion);
+  return (c && c.id !== 'none') ? c.emoji : '🧑‍🌾';
+}
+
+/* ===================== DIFFICULTY-TIERED CONTENT ===================== */
+const content = {
+  easy: {
+    phonics: [
+      { prompt:"Which word has the same vowel sound as 'RAIN'?", emoji:"🌧️", skill:"long-A vowel teams",
+        choices:["train","cat","dog","sun"], answer:"train",
+        explain:"'train' has the same 'ai' long-A sound as 'rain'.", hint:"Listen for the long A sound.",
+        misconceptions:{ "cat":"You picked 'cat' — that has a short A sound, like the 'a' in 'apple'. 'Rain' has a long A sound, like the 'a' in 'ape'.",
+                          "dog":"'dog' has a short O sound, not the long A sound we're listening for in 'rain'.",
+                          "sun":"'sun' doesn't have any A sound at all — try listening just for the vowel sound in the middle." } },
+      { prompt:"Which word starts with the 'sh' sound like 'SHIP'?", emoji:"🚢", skill:"consonant digraph sh",
+        choices:["shark","cat","tree","frog"], answer:"shark",
+        explain:"'shark' starts with the 'sh' digraph, just like 'ship'.", hint:"Say each word out loud slowly.",
+        misconceptions:{ "cat":"'cat' starts with a hard 'c' sound, not 'sh'. Try saying 'ship' and 'cat' out loud — do they start the same way?",
+                          "tree":"'tree' starts with 'tr', not 'sh'. Listen carefully to just the very first sound.",
+                          "frog":"'frog' starts with 'fr', not 'sh'. The 'sh' sound is made with your lips rounded and pushed forward." } },
+      { prompt:"Which word rhymes with 'CAKE'?", emoji:"🎂", skill:"long-A silent E pattern",
+        choices:["lake","cup","dog","run"], answer:"lake",
+        explain:"'lake' rhymes with 'cake' — both have the long A + silent E pattern.", hint:"Think of words ending the same way.",
+        misconceptions:{ "cup":"'cup' ends in a short U sound, not the same ending as 'cake'. Rhyming words sound the same at the end.",
+                          "dog":"'dog' doesn't share an ending sound with 'cake' at all — try saying both out loud.",
+                          "run":"'run' ends in a short U sound. For rhyming, focus only on the last sound, not the spelling." } },
+      { prompt:"Which word means 'not happy' using a prefix?", emoji:"😞", skill:"prefix un-",
+        choices:["unhappy","happier","happiness","happily"], answer:"unhappy",
+        explain:"The prefix 'un-' means 'not', so 'unhappy' means 'not happy'.", hint:"Look for the small word part at the start.",
+        misconceptions:{ "happier":"'happier' compares two things (more happy), it doesn't mean 'not happy'. Look for a word part meaning 'not' instead.",
+                          "happiness":"'happiness' is the feeling itself, not the opposite of it. The suffix '-ness' names a state, it doesn't negate it.",
+                          "happily":"'happily' describes how something is done (happily skipping), it doesn't mean 'not happy'." } },
+      { prompt:"Which word has the same ending sound as 'JUMP'?", emoji:"🦘", skill:"consonant blend mp",
+        choices:["bump","cat","sun","dog"], answer:"bump",
+        explain:"'bump' ends with the same 'mp' sound as 'jump'.", hint:"Listen to the very end of each word.",
+        misconceptions:{ "cat":"'cat' ends in a 't' sound, not 'mp'. Try saying 'jump' and 'cat' — the endings don't match.",
+                          "sun":"'sun' ends in an 'n' sound, which is different from the 'mp' blend in 'jump'.",
+                          "dog":"'dog' ends in a 'g' sound. Focus only on the very last two letters' sound in 'jump'." } },
+    ],
+    spelling: [
+      { word:"jungle", emoji:"🌴", hint:"A thick, green forest with lots of animals.", skill:"soft g + -le ending" },
+      { word:"animal", emoji:"🐾", hint:"A living creature like a lion or monkey.", skill:"multisyllabic word" },
+      { word:"river", emoji:"🏞️", hint:"A long flowing body of water.", skill:"r-controlled vowel" },
+      { word:"forest", emoji:"🌲", hint:"A large area full of trees.", skill:"r-controlled vowel" },
+      { word:"monkey", emoji:"🐒", hint:"A jungle animal that swings on vines.", skill:"vowel team ey" },
+    ],
+    vocab: [
+      { prompt:"The lion looked FEROCIOUS when it roared. What does 'ferocious' mean?", emoji:"🦁", skill:"context clues",
+        choices:["Fierce and scary","Quiet and calm","Small and cute","Very slow"], answer:"Fierce and scary",
+        explain:"'Ferocious' means fierce, wild, or scary.",
+        misconceptions:{ "Quiet and calm":"That's the opposite meaning! A roaring lion is the opposite of calm — think about what a loud roar suggests.",
+                          "Small and cute":"'Ferocious' describes something fierce and intense, not small or cute. Re-read the sentence — a lion roaring sounds intense.",
+                          "Very slow":"Speed isn't what 'ferocious' describes — it describes how fierce or wild something seems." } },
+      { prompt:"Which word is a SYNONYM for 'big'?", emoji:"🐘", skill:"synonyms",
+        choices:["huge","tiny","fast","cold"], answer:"huge",
+        explain:"'Huge' means very big, just like 'big'.",
+        misconceptions:{ "tiny":"'tiny' actually means the opposite of 'big' — that's an antonym, not a synonym.",
+                          "fast":"'fast' describes speed, not size. A synonym for 'big' needs to also describe size.",
+                          "cold":"'cold' describes temperature, not size. Look for a word that also means large." } },
+      { prompt:"Which word is an ANTONYM for 'loud'?", emoji:"🔊", skill:"antonyms",
+        choices:["quiet","noisy","large","happy"], answer:"quiet",
+        explain:"'Quiet' means the opposite of 'loud'.",
+        misconceptions:{ "noisy":"'noisy' means almost the same as 'loud' — that's a synonym, not an antonym (opposite).",
+                          "large":"'large' describes size, not sound level. An antonym for 'loud' should also describe sound.",
+                          "happy":"'happy' describes a feeling, not sound level. Look for a word about sound instead." } },
+      { prompt:"The explorer felt HAPPY when she found the treasure. What does 'happy' describe?", emoji:"😊", skill:"context clues",
+        choices:["A good feeling","A type of animal","A place","A color"], answer:"A good feeling",
+        explain:"'Happy' describes a good, joyful feeling.",
+        misconceptions:{ "A type of animal":"'Happy' isn't a creature — it's describing how the explorer feels inside.",
+                          "A place":"'Happy' isn't a location — re-read the sentence and notice it's describing the explorer's feeling.",
+                          "A color":"'Happy' has nothing to do with color — it's an emotion word." } },
+      { prompt:"Which word means the same as 'begin'?", emoji:"🚀", skill:"synonyms",
+        choices:["start","end","stop","finish"], answer:"start",
+        explain:"'Start' means the same as 'begin'.",
+        misconceptions:{ "end":"'end' means the opposite of 'begin' — that's an antonym.",
+                          "stop":"'stop' is closer to ending something, not starting it. Think about what happens first vs. last.",
+                          "finish":"'finish' also means the opposite of 'begin' — both describe an ending, not a start." } },
+    ]
+  },
+  medium: {
+    phonics: [
+      { prompt:"Which word has an R-controlled vowel like 'BIRD'?", emoji:"🐦", skill:"r-controlled vowels",
+        choices:["turtle","apple","kite","boat"], answer:"turtle",
+        explain:"'turtle' has the 'ur' sound just like 'bird'.", hint:"Look for a vowel followed by the letter R.",
+        misconceptions:{ "apple":"'apple' has a short A sound with no R after the vowel — r-controlled vowels need a vowel + r together.",
+                          "kite":"'kite' has a long I sound (vowel + silent E pattern), not an r-controlled vowel.",
+                          "boat":"'boat' has a vowel team 'oa', not a vowel followed by R." } },
+      { prompt:"Which word starts with a silent letter?", emoji:"🤫", skill:"silent letters",
+        choices:["knight","monkey","jungle","parrot"], answer:"knight",
+        explain:"The 'k' in 'knight' is silent.", hint:"One of these letters at the start makes no sound.",
+        misconceptions:{ "monkey":"Every letter in 'monkey' is pronounced — there's no silent letter at the start here.",
+                          "jungle":"'jungle' doesn't have a silent starting letter — the 'j' is fully pronounced.",
+                          "parrot":"'parrot' starts with a clearly pronounced 'p' — no silent letters at the beginning." } },
+      { prompt:"Which word has the same vowel team sound as 'BOAT'?", emoji:"⛵", skill:"vowel teams oa",
+        choices:["road","cup","fish","tree"], answer:"road",
+        explain:"'road' shares the 'oa' long-O sound with 'boat'.", hint:"Two vowels together can make one sound.",
+        misconceptions:{ "cup":"'cup' has a short U sound, nothing like the long O in 'boat'.",
+                          "fish":"'fish' has a short I sound — very different from the 'oa' sound in 'boat'.",
+                          "tree":"'tree' has a long E sound from the 'ee' vowel team, not the long O sound in 'boat'." } },
+      { prompt:"Which word means 'not happy' using a prefix?", emoji:"😞", skill:"prefix un-",
+        choices:["unhappy","happier","happiness","happily"], answer:"unhappy",
+        explain:"The prefix 'un-' means 'not', so 'unhappy' means 'not happy'.", hint:"The prefix changes the meaning to its opposite.",
+        misconceptions:{ "happier":"'happier' is a comparison (more happy than something else), not a negation.",
+                          "happiness":"'happiness' names the feeling itself using the suffix '-ness', it doesn't negate it.",
+                          "happily":"'happily' is an adverb describing how something is done, not a negation of happy." } },
+      { prompt:"Which word ends with the suffix meaning 'a state of being'?", emoji:"✨", skill:"suffix -ness",
+        choices:["kindness","kindly","unkind","kinder"], answer:"kindness",
+        explain:"The suffix '-ness' turns 'kind' into a noun meaning the state of being kind.", hint:"Look for the ending that turns an adjective into a noun.",
+        misconceptions:{ "kindly":"'kindly' is an adverb (describes how something is done), not a noun naming a state.",
+                          "unkind":"'unkind' uses the prefix 'un-' to mean the opposite of kind, it's not naming a state of being.",
+                          "kinder":"'kinder' is a comparison form (more kind), not a noun for the state of being kind." } },
+    ],
+    spelling: [
+      { word:"believe", emoji:"🙏", hint:"To feel sure something is true.", skill:"i-before-e pattern" },
+      { word:"necessary", emoji:"📋", hint:"Something you must have or do.", skill:"double consonant pattern" },
+      { word:"vacation", emoji:"🏖️", hint:"A trip or break from school/work.", skill:"-tion suffix" },
+      { word:"mysterious", emoji:"🔍", hint:"Strange and hard to explain.", skill:"multisyllabic + suffix" },
+      { word:"adventure", emoji:"🗺️", hint:"An exciting journey or experience.", skill:"-ture ending" },
+    ],
+    vocab: [
+      { prompt:"The jaguar moved through the jungle with great AGILITY. What does 'agility' mean?", emoji:"🐆", skill:"context clues",
+        choices:["The ability to move quickly and easily","A type of loud roar","A kind of thick fur","Being very tired"], answer:"The ability to move quickly and easily",
+        explain:"'Agility' means being able to move quickly and gracefully.",
+        misconceptions:{ "A type of loud roar":"'Agility' isn't a sound at all — it describes physical movement, not noise.",
+                          "A kind of thick fur":"'Agility' has nothing to do with appearance — think about how the jaguar is moving through the jungle.",
+                          "Being very tired":"That's almost the opposite — 'agility' suggests energetic, quick movement, not tiredness." } },
+      { prompt:"Which word is a SYNONYM for 'enormous'?", emoji:"🐘", skill:"synonyms",
+        choices:["gigantic","tiny","quiet","narrow"], answer:"gigantic",
+        explain:"'Gigantic' means extremely large, just like 'enormous'.",
+        misconceptions:{ "tiny":"'tiny' means the opposite of 'enormous' — that's an antonym.",
+                          "quiet":"'quiet' describes sound level, not size. Look for a size-related word instead.",
+                          "narrow":"'narrow' describes width, not overall size. 'Enormous' is about total size." } },
+      { prompt:"Which word is an ANTONYM for 'ancient'?", emoji:"⏳", skill:"antonyms",
+        choices:["modern","old","historic","aged"], answer:"modern",
+        explain:"'Modern' means new or current, the opposite of 'ancient'.",
+        misconceptions:{ "old":"'old' means almost the same thing as 'ancient' — that's a synonym, not an antonym.",
+                          "historic":"'historic' relates to history, similar in meaning to 'ancient', not opposite.",
+                          "aged":"'aged' also means old, which is close to 'ancient' in meaning, not its opposite." } },
+      { prompt:"The explorer felt a sense of TREPIDATION before entering the dark cave. What does 'trepidation' mean?", emoji:"🦇", skill:"context clues",
+        choices:["A feeling of fear or nervousness","A feeling of joy","Complete confidence","Extreme boredom"], answer:"A feeling of fear or nervousness",
+        explain:"'Trepidation' describes nervous fear about something that might happen.",
+        misconceptions:{ "A feeling of joy":"That's the opposite feeling — think about how someone would feel before entering a dark, unknown cave.",
+                          "Complete confidence":"'Trepidation' suggests worry, not confidence — the opposite of feeling sure of yourself.",
+                          "Extreme boredom":"'Trepidation' is an anxious feeling, not a lack of interest. A dark cave would likely cause worry, not boredom." } },
+      { prompt:"Which word means the same as 'observe'?", emoji:"🔭", skill:"synonyms",
+        choices:["watch","ignore","forget","hide"], answer:"watch",
+        explain:"'Observe' means to watch or look at carefully, just like 'watch'.",
+        misconceptions:{ "ignore":"'ignore' means to not pay attention — that's nearly the opposite of 'observe'.",
+                          "forget":"'forget' means to lose from memory, unrelated to watching or paying attention.",
+                          "hide":"'hide' means to conceal yourself, which is unrelated to watching something carefully." } },
+    ]
+  },
+  hard: {
+    phonics: [
+      { prompt:"Which word has the schwa sound in its first syllable, like 'about'?", emoji:"🔤", skill:"schwa sound",
+        choices:["around","monkey","jungle","parrot"], answer:"around",
+        explain:"The 'a' in 'around' makes the quiet schwa sound, just like in 'about'.", hint:"The schwa sound is a soft, unstressed 'uh' sound.",
+        misconceptions:{ "monkey":"The first syllable of 'monkey' is stressed and clearly pronounced, not the soft schwa sound.",
+                          "jungle":"'jungle' starts with a clearly stressed syllable, not the soft, unstressed schwa sound.",
+                          "parrot":"'parrot' starts with a stressed 'pa' sound, not the quiet unstressed schwa." } },
+      { prompt:"Which word uses the prefix 'trans-' meaning 'across'?", emoji:"🌍", skill:"prefix trans-",
+        choices:["transport","report","import","support"], answer:"transport",
+        explain:"'Trans-' means 'across', so 'transport' means to carry something across a distance.", hint:"Focus on the meaning of the word part before the root.",
+        misconceptions:{ "report":"'report' uses the prefix 're-' (again), not 'trans-' (across).",
+                          "import":"'import' uses the prefix 'im-' (into), not 'trans-' (across).",
+                          "support":"'support' uses the prefix 'sup-' (under), not 'trans-' (across)." } },
+      { prompt:"Which word has a soft 'c' sound like in 'circle'?", emoji:"⭕", skill:"soft c",
+        choices:["cent","cat","cup","cot"], answer:"cent",
+        explain:"'Cent' has a soft C sound (like 's'), just as in 'circle'.", hint:"Soft C usually appears before E, I, or Y.",
+        misconceptions:{ "cat":"'cat' has a hard C sound (like 'k'), because C is followed by A, not E/I/Y.",
+                          "cup":"'cup' has a hard C sound since C is followed by U — soft C needs E, I, or Y after it.",
+                          "cot":"'cot' has a hard C sound because C is followed by O, not E, I, or Y." } },
+      { prompt:"Which word means 'to do again' using a prefix?", emoji:"🔁", skill:"prefix re-",
+        choices:["rebuild","building","builder","unbuilt"], answer:"rebuild",
+        explain:"The prefix 're-' means 'again', so 'rebuild' means to build again.", hint:"Look for the prefix meaning 'again'.",
+        misconceptions:{ "building":"'building' just names the act or the structure itself, it has no prefix meaning 'again'.",
+                          "builder":"'builder' names the person who builds, using the suffix '-er', not a prefix meaning 'again'.",
+                          "unbuilt":"'unbuilt' uses 'un-' meaning 'not', so it means 'not built', not 'built again'." } },
+      { prompt:"Which word ends with the suffix meaning 'full of'?", emoji:"🎨", skill:"suffix -ful",
+        choices:["colorful","colorless","colored","coloring"], answer:"colorful",
+        explain:"The suffix '-ful' means 'full of', so 'colorful' means full of color.", hint:"One suffix means the opposite of '-less'.",
+        misconceptions:{ "colorless":"'-less' means 'without', which is the opposite of 'full of'.",
+                          "colored":"'-ed' just marks past tense or a description, not 'full of'.",
+                          "coloring":"'-ing' marks an ongoing action, unrelated to the meaning 'full of'." } },
+    ],
+    spelling: [
+      { word:"conscience", emoji:"🧠", hint:"The inner sense of right and wrong.", skill:"silent letters + -ence" },
+      { word:"embarrass", emoji:"😳", hint:"To make someone feel awkward or ashamed.", skill:"double consonants" },
+      { word:"immediately", emoji:"⏱️", hint:"Happening right away, without delay.", skill:"prefix im- + -ly" },
+      { word:"unfortunately", emoji:"☔", hint:"Used to describe something unlucky.", skill:"prefix + suffix stacking" },
+      { word:"extraordinary", emoji:"🌟", hint:"Very unusual or remarkable.", skill:"compound root word" },
+    ],
+    vocab: [
+      { prompt:"The ancient ruins were surrounded by DENSE vegetation. What does 'dense' mean?", emoji:"🌳", skill:"context clues",
+        choices:["Thick and crowded together","Light and airy","Very colorful","Extremely dry"], answer:"Thick and crowded together",
+        explain:"'Dense' describes something packed closely together, like thick plants.",
+        misconceptions:{ "Light and airy":"That's the opposite meaning — 'dense' suggests things are packed tightly, not open and light.",
+                          "Very colorful":"'Dense' doesn't describe color at all, it describes how closely packed something is.",
+                          "Extremely dry":"'Dense' is about how tightly packed something is, not about moisture level." } },
+      { prompt:"Which word is a SYNONYM for 'meticulous'?", emoji:"🔬", skill:"synonyms",
+        choices:["careful","careless","lazy","quick"], answer:"careful",
+        explain:"'Meticulous' means extremely careful and precise, similar to 'careful'.",
+        misconceptions:{ "careless":"'careless' means the opposite of 'meticulous' — that's an antonym.",
+                          "lazy":"'lazy' suggests a lack of effort, which is the opposite of the careful precision 'meticulous' describes.",
+                          "quick":"'meticulous' actually implies taking your time to be precise, which is often the opposite of being quick." } },
+      { prompt:"Which word is an ANTONYM for 'abundant'?", emoji:"🍃", skill:"antonyms",
+        choices:["scarce","plentiful","large","common"], answer:"scarce",
+        explain:"'Scarce' means very little of something, the opposite of 'abundant' (plentiful).",
+        misconceptions:{ "plentiful":"'plentiful' means almost the same as 'abundant' — that's a synonym, not an antonym.",
+                          "large":"'large' describes size, not quantity. 'Abundant' is about how much of something there is.",
+                          "common":"'common' can describe something frequent, which is closer in meaning to 'abundant', not its opposite." } },
+      { prompt:"The scientist made a PROFOUND discovery in the rainforest. What does 'profound' mean?", emoji:"🔬", skill:"context clues",
+        choices:["Very deep or significant","Small and unimportant","Loud and sudden","Quick and temporary"], answer:"Very deep or significant",
+        explain:"'Profound' describes something with deep meaning or great importance.",
+        misconceptions:{ "Small and unimportant":"That's the opposite — 'profound' describes something with great significance, not something minor.",
+                          "Loud and sudden":"'Profound' is about depth of meaning, not volume or timing.",
+                          "Quick and temporary":"'Profound' suggests lasting importance, the opposite of something quick and temporary." } },
+      { prompt:"Which word means the same as 'persevere'?", emoji:"🏔️", skill:"synonyms",
+        choices:["persist","quit","rest","forget"], answer:"persist",
+        explain:"'Persevere' means to keep going despite difficulty, similar to 'persist'.",
+        misconceptions:{ "quit":"'quit' means to stop trying — that's the opposite of 'persevere'.",
+                          "rest":"'rest' means to pause and relax, which is different from continuing to push through difficulty.",
+                          "forget":"'forget' means to lose from memory, unrelated to the idea of continuing effort." } },
+    ]
+  }
+};
+
+/* ===================== PERSISTENT PLAYER DATA ===================== */
+function loadPlayerData(name){
+  const key = "wordwizard_" + name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const raw = localStorage.getItem(key);
+  if(raw){ try { return JSON.parse(raw); } catch(e){} }
+  return { totalGems: 0, ownedCompanions: ["none"], ownedThemes: ["classic"], equippedCompanion: "none", equippedTheme: "classic", history: [] };
+}
+function savePlayerData(){
+  const key = "wordwizard_" + playerName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  localStorage.setItem(key, JSON.stringify(playerData));
+}
+function applyTheme(){
+  const theme = themes.find(t => t.id === playerData.equippedTheme) || themes[0];
+  document.body.style.background = theme.bg;
+}
+
+/* ===================== GAME STATE ===================== */
+let playerName = "";
+let playerData = null;
+let selectedTier = null;
+let questionQueue = [];
+let currentQ = null;
+let score = 0;
+let streak = 0;
+let totalQuestions = 0;
+let questionsAnswered = 0;
+let roundResults = { phonics: {correct:0, total:0}, spelling: {correct:0, total:0}, vocab: {correct:0, total:0} };
+let missedSkills = [];
+let streak3Fired = false;
+let streak5Fired = false;
+
+function shuffle(arr){ return arr.map(a=>[Math.random(),a]).sort((x,y)=>x[0]-y[0]).map(a=>a[1]); }
+
+function submitName(){
+  const val = document.getElementById('nameInput').value.trim();
+  if(val.length === 0){ document.getElementById('nameError').textContent = "Please type your name to continue."; return; }
+  playerName = val;
+  playerData = loadPlayerData(playerName);
+  applyTheme();
+  document.getElementById('nameScreen').style.display = 'none';
+  document.getElementById('startScreen').style.display = 'block';
+  document.getElementById('walletInfo').textContent = playerData.history.length > 0 ? `💎 You have ${playerData.totalGems} saved gems from before.` : "";
+  const companion = companions.find(c => c.id === playerData.equippedCompanion);
+  document.getElementById('startEmoji').textContent = companion && companion.id !== "none" ? `🦜🐆${companion.emoji}` : "🦜🐆🌿";
+  const isReturning = playerData.history.length > 0;
+  const line = isReturning ? samLines.welcomeBack(playerName, playerData.totalGems) : samLines.welcomeNew(playerName);
+  showSpeechBubble('speechBubbleWrap', '🧑‍🌾', line);
+}
+document.getElementById('nameInput').addEventListener('keyup', function(e){ if(e.key === 'Enter') submitName(); });
+
+function selectTier(tier){
+  selectedTier = tier;
+  document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`.tier-btn[data-tier="${tier}"]`).classList.add('selected');
+  document.getElementById('startBtn').disabled = false;
+}
+
+/* ===================== SHOP ===================== */
+function openShop(){
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('endScreen').style.display = 'none';
+  document.getElementById('shopScreen').style.display = 'block';
+  renderShop();
+}
+function closeShop(){ document.getElementById('shopScreen').style.display = 'none'; document.getElementById('startScreen').style.display = 'block'; }
+function goToShopFromEnd(){ openShop(); }
+
+function renderShop(){
+  document.getElementById('gemWalletBadgeShop').textContent = "💎 " + playerData.totalGems + " gems available";
+  const companionGrid = document.getElementById('companionShopGrid');
+  companionGrid.innerHTML = '';
+  companions.forEach(c => {
+    const owned = playerData.ownedCompanions.includes(c.id);
+    const equipped = playerData.equippedCompanion === c.id;
+    const div = document.createElement('div');
+    div.className = 'shop-item' + (owned ? ' owned' : '') + (equipped ? ' equipped' : '');
+    let btnHtml = '';
+    if(equipped){ btnHtml = `<button class="shop-item-btn equipped-btn" disabled>Equipped</button>`; }
+    else if(owned){ btnHtml = `<button class="shop-item-btn" onclick="equipCompanion('${c.id}')">Equip</button>`; }
+    else { const canAfford = playerData.totalGems >= c.cost; btnHtml = `<button class="shop-item-btn" ${canAfford ? '' : 'disabled'} onclick="buyCompanion('${c.id}', ${c.cost})">💎 ${c.cost}</button>`; }
+    div.innerHTML = `<div class="shop-item-emoji">${c.emoji}</div><div class="shop-item-name">${c.name}</div>${btnHtml}`;
+    companionGrid.appendChild(div);
+  });
+  const themeGrid = document.getElementById('themeShopGrid');
+  themeGrid.innerHTML = '';
+  themes.forEach(t => {
+    const owned = playerData.ownedThemes.includes(t.id);
+    const equipped = playerData.equippedTheme === t.id;
+    const div = document.createElement('div');
+    div.className = 'shop-item' + (owned ? ' owned' : '') + (equipped ? ' equipped' : '');
+    let btnHtml = '';
+    if(equipped){ btnHtml = `<button class="shop-item-btn equipped-btn" disabled>Equipped</button>`; }
+    else if(owned){ btnHtml = `<button class="shop-item-btn" onclick="equipTheme('${t.id}')">Equip</button>`; }
+    else { const canAfford = playerData.totalGems >= t.cost; btnHtml = `<button class="shop-item-btn" ${canAfford ? '' : 'disabled'} onclick="buyTheme('${t.id}', ${t.cost})">💎 ${t.cost}</button>`; }
+    div.innerHTML = `<div class="shop-item-emoji">${t.emoji}</div><div class="shop-item-name">${t.name}</div>${btnHtml}`;
+    themeGrid.appendChild(div);
+  });
+}
+function buyCompanion(id, cost){ if(playerData.totalGems < cost) return; playerData.totalGems -= cost; playerData.ownedCompanions.push(id); playerData.equippedCompanion = id; savePlayerData(); renderShop(); }
+function equipCompanion(id){ playerData.equippedCompanion = id; savePlayerData(); renderShop(); }
+function buyTheme(id, cost){ if(playerData.totalGems < cost) return; playerData.totalGems -= cost; playerData.ownedThemes.push(id); playerData.equippedTheme = id; savePlayerData(); applyTheme(); renderShop(); }
+function equipTheme(id){ playerData.equippedTheme = id; savePlayerData(); applyTheme(); renderShop(); }
+
+/* ===================== MY STATS ===================== */
+function openStats(){ document.getElementById('startScreen').style.display = 'none'; document.getElementById('statsScreen').style.display = 'block'; renderStats(); }
+function closeStats(){ document.getElementById('statsScreen').style.display = 'none'; document.getElementById('startScreen').style.display = 'block'; }
+function renderStats(){
+  const history = playerData.history;
+  const totalSessions = history.length;
+  const totalGemsEarned = history.reduce((sum, h) => sum + (h.gemsEarned || 0), 0);
+  const tierCounts = {};
+  history.forEach(h => { tierCounts[h.tier] = (tierCounts[h.tier] || 0) + 1; });
+  const favoriteTier = Object.keys(tierCounts).length > 0 ? Object.keys(tierCounts).reduce((a,b) => tierCounts[a] >= tierCounts[b] ? a : b) : "None yet";
+  const tierNames = { easy:"Cub Trail", medium:"Ranger Trail", hard:"Lion Trail" };
+  document.getElementById('statsSummary').innerHTML = `
+    <div class="stat-box">🎮 Sessions played: ${totalSessions}</div>
+    <div class="stat-box">💎 Lifetime gems earned: ${totalGemsEarned}</div>
+    <div class="stat-box">🏞️ Favorite trail: ${tierNames[favoriteTier] || favoriteTier}</div>
+    <div class="stat-box">💰 Current gem balance: ${playerData.totalGems}</div>`;
+  const table = document.getElementById('historyTable');
+  if(history.length === 0){ table.innerHTML = `<tr><td style="text-align:center; padding:20px;">No sessions yet — play your first trek to start your history!</td></tr>`; }
+  else {
+    let rows = `<tr><th>Date</th><th>Trail</th><th>First-Try Score</th><th>Gems Earned</th></tr>`;
+    history.slice().reverse().forEach(h => { rows += `<tr><td>${h.date}</td><td>${tierNames[h.tier] || h.tier}</td><td>${h.score}</td><td>${h.gemsEarned}</td></tr>`; });
+    table.innerHTML = rows;
+  }
+}
+
+/* ===================== TRAIL MAP ===================== */
+function renderTrailMap(){
+  const trailMap = document.getElementById('trailMap');
+  trailMap.innerHTML = '';
+  const companion = companions.find(c => c.id === playerData.equippedCompanion);
+  const revealAhead = 2;
+  for(let i = 0; i < totalQuestions; i++){
+    if(i > 0){
+      const connector = document.createElement('div');
+      connector.className = 'trail-connector' + (i <= questionsAnswered - 1 ? ' done' : '');
+      trailMap.appendChild(connector);
+    }
+    const stop = document.createElement('div');
+    const stepNum = i + 1;
+    let stateClass = 'hidden'; let icon = '❔';
+    if(stepNum < questionsAnswered){ stateClass = 'done'; icon = '💎'; }
+    else if(stepNum === questionsAnswered){ stateClass = 'current'; icon = companion && companion.id !== 'none' ? companion.emoji : '🧑‍🌾'; }
+    else if(stepNum <= questionsAnswered + revealAhead){ stateClass = ''; icon = '🪨'; }
+    stop.className = 'trail-stop ' + stateClass;
+    stop.innerHTML = `<div class="stone">${icon}</div>`;
+    trailMap.appendChild(stop);
+  }
+}
+
+/* ===================== MAIN GAME FLOW ===================== */
+function buildQuestionSet(){
+  const tierData = content[selectedTier];
+  const phonics = shuffle(tierData.phonics).map(q => ({...q, type:'phonics', isRetry:false}));
+  const spelling = shuffle(tierData.spelling).map(q => ({...q, type:'spelling', isRetry:false}));
+  const vocab = shuffle(tierData.vocab).map(q => ({...q, type:'vocab', isRetry:false}));
+  return shuffle([...phonics, ...spelling, ...vocab]);
+}
+function buildRetryVersion(originalQ){
+  const pool = content[selectedTier][originalQ.type];
+  const alt = pool.find(q => q.skill === originalQ.skill && q.prompt !== originalQ.prompt && q.word !== originalQ.word);
+  const chosen = alt || originalQ;
+  return {...chosen, type: originalQ.type, isRetry: true};
+}
+
+function startGame(){
+  if(!selectedTier) return;
+  window.speechSynthesis.cancel();
+  questionQueue = buildQuestionSet();
+  totalQuestions = questionQueue.length;
+  questionsAnswered = 0; score = 0; streak = 0; streak3Fired = false; streak5Fired = false;
+  roundResults = { phonics: {correct:0, total:0}, spelling: {correct:0, total:0}, vocab: {correct:0, total:0} };
+  missedSkills = [];
+  const tierNames = { easy:"🐣 Cub Trail", medium:"🐒 Ranger Trail", hard:"🦁 Lion Trail" };
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('trailMapOuter').style.display='block';
+  document.getElementById('questionArea').style.display='block';
+  document.getElementById('tierBadge').textContent = tierNames[selectedTier];
+  document.getElementById('playerNameBadge').textContent = "👤 " + playerName;
+  document.getElementById('gemWalletBadge').textContent = "💎 " + playerData.totalGems;
+  document.getElementById('qTotalDisplay').textContent = totalQuestions;
+  speakLine(samLines.gameStart(tierNames[selectedTier].replace(/^\S+\s/, '')));
+  loadNextQuestion();
+}
+
+function speakWord(){
+  if(currentQ && currentQ.type === 'spelling' && 'speechSynthesis' in window){
+    const utter = new SpeechSynthesisUtterance(currentQ.word); utter.rate = 0.85; window.speechSynthesis.speak(utter);
+  }
+}
+
+function loadNextQuestion(){
+  if(questionQueue.length === 0){ showEnd(); return; }
+  currentQ = questionQueue.shift();
+  questionsAnswered++;
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = '';
+  document.getElementById('reteachBox').style.display = 'none';
+  document.getElementById('reteachBox').innerHTML = '';
+  document.getElementById('qNumDisplay').textContent = questionsAnswered;
+  document.getElementById('qTotalDisplay').textContent = totalQuestions;
+  document.getElementById('promptEmoji').textContent = currentQ.emoji;
+  document.getElementById('retryBadge').style.display = currentQ.isRetry ? 'inline-block' : 'none';
+  renderTrailMap();
+  const labelEl = document.getElementById('roundLabel');
+  const hiddenWordDisplay = document.getElementById('hidden-word-display');
+  const speakBtn = document.getElementById('speakBtn');
+  const choicesArea = document.getElementById('choicesArea');
+  const textInputArea = document.getElementById('textInputArea');
+  choicesArea.innerHTML = ''; hiddenWordDisplay.textContent = ''; textInputArea.style.display = 'none';
+  choicesArea.style.display = 'grid'; speakBtn.style.display = 'none';
+  if(currentQ.type === 'phonics'){
+    labelEl.textContent = '🌿 Phonics Vines'; labelEl.style.background = '#43a047';
+    document.getElementById('questionText').textContent = currentQ.prompt;
+    if(selectedTier === 'easy' && currentQ.hint){ hiddenWordDisplay.textContent = "💡 " + currentQ.hint; }
+    renderChoices(currentQ.choices, currentQ.answer);
+  } else if(currentQ.type === 'vocab'){
+    labelEl.textContent = '💧 Vocabulary Falls'; labelEl.style.background = '#0288d1';
+    document.getElementById('questionText').textContent = currentQ.prompt;
+    renderChoices(currentQ.choices, currentQ.answer);
+  } else if(currentQ.type === 'spelling'){
+    labelEl.textContent = '🐊 Spelling Swamp'; labelEl.style.background = '#6d4c41';
+    document.getElementById('questionText').textContent = "Listen or read the hint, then type the word:";
+    let hintText = "Hint: " + currentQ.hint;
+    if(selectedTier === 'easy'){ hintText += "  |  Word length: " + currentQ.word.length + " letters, starts with '" + currentQ.word[0].toUpperCase() + "'"; }
+    hiddenWordDisplay.textContent = hintText;
+    speakBtn.style.display = 'inline-block'; choicesArea.style.display = 'none'; textInputArea.style.display = 'block';
+    document.getElementById('typedAnswer').value = ''; document.getElementById('typedAnswer').focus();
+    setTimeout(speakWord, 400);
+  }
+}
+
+function renderChoices(choices, answer){
+  const choicesArea = document.getElementById('choicesArea');
+  const shuffled = shuffle(choices);
+  shuffled.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn'; btn.textContent = choice;
+    btn.onclick = () => handleChoice(choice, answer, btn);
+    choicesArea.appendChild(btn);
+  });
+}
+
+function handleChoice(selected, answer, btnEl){
+  const buttons = document.querySelectorAll('.choice-btn');
+  buttons.forEach(b => b.disabled = true);
+  const isCorrect = selected === answer;
+  if(isCorrect){ btnEl.classList.add('correct'); }
+  else { btnEl.classList.add('wrong'); buttons.forEach(b => { if(b.textContent === answer) b.classList.add('correct'); }); }
+  const targetedMsg = (!isCorrect && currentQ.misconceptions && currentQ.misconceptions[selected]) ? currentQ.misconceptions[selected] : null;
+  registerResult(isCorrect, targetedMsg);
+}
+
+function checkTyped(){
+  const typed = document.getElementById('typedAnswer').value.trim().toLowerCase();
+  const isCorrect = typed === currentQ.word.toLowerCase();
+  const targetedMsg = isCorrect ? null : `You typed "${typed || '(nothing)'}" — the correct spelling is "${currentQ.word}". Look closely at the tricky part and try to picture it in your head.`;
+  registerResult(isCorrect, targetedMsg);
+}
+
+function registerResult(isCorrect, targetedMsg){
+  if(!currentQ.isRetry){ roundResults[currentQ.type].total++; if(isCorrect) roundResults[currentQ.type].correct++; }
+  const fb = document.getElementById('feedback');
+  const reteach = document.getElementById('reteachBox');
+  if(isCorrect){
+    score++; streak++; playerData.totalGems++; savePlayerData();
+    document.getElementById('gemWalletBadge').textContent = "💎 " + playerData.totalGems;
+    fb.textContent = currentQ.isRetry ? "✅ Great fix! You've got it now. (+1 gem saved)" : "✅ Correct! (+1 gem saved)";
+    fb.className = 'correct-fb'; reteach.style.display = 'none'; renderTrailMap();
+    if(streak === 3 && !streak3Fired){ streak3Fired = true; speakLine(samLines.streak3); }
+    if(streak === 5 && !streak5Fired){ streak5Fired = true; speakLine(samLines.streak5); }
+    if(currentQ.isRetry){ speakLine(samLines.afterRetrySuccess); }
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'action-btn';
+    nextBtn.textContent = (questionQueue.length > 0) ? "Next ➡️" : "See Results 🏁";
+    nextBtn.onclick = loadNextQuestion;
+    fb.appendChild(document.createElement('br')); fb.appendChild(nextBtn);
+  } else {
+    streak = 0; fb.textContent = "❌ Not quite yet."; fb.className = 'wrong-fb';
+    reteach.style.display = 'block';
+    reteach.innerHTML = `<strong>Let's figure out why:</strong><br>${targetedMsg || currentQ.explain}<br><br><strong>Remember:</strong> ${currentQ.explain}`;
+    if(!currentQ.isRetry){
+      const retryQ = buildRetryVersion(currentQ);
+      const insertPos = Math.min(3, questionQueue.length);
+      questionQueue.splice(insertPos, 0, retryQ);
+      totalQuestions++;
+      if(!missedSkills.includes(currentQ.skill)) missedSkills.push(currentQ.skill);
+      speakLine(samLines.encourageAfterMiss);
+    }
+    const gotItBtn = document.createElement('button');
+    gotItBtn.className = 'action-btn retry';
+    gotItBtn.textContent = currentQ.isRetry ? "Got it — keep going ➡️" : "Got it — I'll try a similar one soon ➡️";
+    gotItBtn.onclick = loadNextQuestion;
+    reteach.appendChild(document.createElement('br')); reteach.appendChild(gotItBtn);
+  }
+  document.getElementById('streakDisplay').textContent = streak;
+}
+
+function showEnd(){
+  document.getElementById('questionArea').style.display = 'none';
+  document.getElementById('trailMapOuter').style.display = 'none';
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('endScreen').style.display = 'block';
+  const originalTotal = roundResults.phonics.total + roundResults.spelling.total + roundResults.vocab.total;
+  const originalCorrect = roundResults.phonics.correct + roundResults.spelling.correct + roundResults.vocab.correct;
+  const pct = Math.round((originalCorrect/originalTotal)*100);
+  let title, emoji, samLine;
+  if(pct >= 90){ title = "Jungle Safari Master!"; emoji = "🏆🦁"; samLine = samLines.finalHigh(playerName); }
+  else if(pct >= 70){ title = "Great Safari Guide!"; emoji = "🥳🐘"; samLine = samLines.finalHigh(playerName); }
+  else if(pct >= 50){ title = "Rising Ranger!"; emoji = "🙂🐒"; samLine = samLines.finalMid(playerName); }
+  else { title = "Keep Exploring!"; emoji = "💪🌿"; samLine = samLines.finalLow(playerName); }
+  const tierNames = { easy:"Cub Trail", medium:"Ranger Trail", hard:"Lion Trail" };
+  document.getElementById('endEmoji').textContent = emoji;
+  document.getElementById('endTitle').textContent = title;
+  let summaryText = `${playerName}, on the ${tierNames[selectedTier]}, you got ${originalCorrect} out of ${originalTotal} first-try correct (${pct}%). `;
+  summaryText += missedSkills.length > 0 ? `You worked through retries on: ${missedSkills.join(", ")}. ` : "You got everything right on the first try! ";
+  summaryText += `You now have 💎 ${playerData.totalGems} total gems saved — spend them in the Gem Shop!`;
+  document.getElementById('endSummary').textContent = summaryText;
+  playerData.history.push({ date: new Date().toLocaleDateString(), tier: selectedTier, score: `${originalCorrect}/${originalTotal}`, gemsEarned: score });
+  savePlayerData();
+  showSpeechBubble('speechBubbleWrapEnd', currentCompanionEmoji(), samLine);
+  const table = document.getElementById('resultsTable');
+  table.innerHTML = `
+    <tr><td>Phonics Vines (first try)</td><td>${roundResults.phonics.correct}/${roundResults.phonics.total}</td></tr>
+    <tr><td>Spelling Swamp (first try)</td><td>${roundResults.spelling.correct}/${roundResults.spelling.total}</td></tr>
+    <tr><td>Vocabulary Falls (first try)</td><td>${roundResults.vocab.correct}/${roundResults.vocab.total}</td></tr>
+    <tr><td>Gems earned this session</td><td>${score}</td></tr>
+    <tr><td>Total gems saved (all-time)</td><td>${playerData.totalGems}</td></tr>
+    <tr><td>Skills that needed a retry</td><td>${missedSkills.length > 0 ? missedSkills.join(", ") : "None!"}</td></tr>`;
+}
+
+function downloadResults(){
+  const now = new Date();
+  const dateStr = now.toLocaleDateString(); const timeStr = now.toLocaleTimeString();
+  const originalTotal = roundResults.phonics.total + roundResults.spelling.total + roundResults.vocab.total;
+  const originalCorrect = roundResults.phonics.correct + roundResults.spelling.correct + roundResults.vocab.correct;
+  const pct = Math.round((originalCorrect/originalTotal)*100);
+  const tierNames = { easy:"Cub Trail (Easy)", medium:"Ranger Trail (Medium)", hard:"Lion Trail (Hard)" };
+  const rows = [
+    ["Student Name", playerName], ["Date", dateStr], ["Time", timeStr],
+    ["Difficulty Tier", tierNames[selectedTier]],
+    ["First-Try Score", `${originalCorrect}/${originalTotal}`], ["First-Try Percentage", pct + "%"],
+    ["Gems Earned This Session", score], ["Total Gems Saved (All-Time)", playerData.totalGems],
+    ["Phonics Vines (first try)", `${roundResults.phonics.correct}/${roundResults.phonics.total}`],
+    ["Spelling Swamp (first try)", `${roundResults.spelling.correct}/${roundResults.spelling.total}`],
+    ["Vocabulary Falls (first try)", `${roundResults.vocab.correct}/${roundResults.vocab.total}`],
+    ["Skills Needing Retry", missedSkills.length > 0 ? missedSkills.join("; ") : "None"],
+  ];
+  let csv = "Field,Value\n" + rows.map(r => `"${r[0]}","${r[1]}"`).join("\n");
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName = playerName.replace(/[^a-z0-9]/gi, '_');
+  const safeDate = now.toISOString().slice(0,10);
+  a.href = url; a.download = `${safeName}_${safeDate}_results.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.addEventListener('keyup', function(e){ if(e.key === 'Enter' && document.activeElement && document.activeElement.id === 'typedAnswer'){ checkTyped(); } });
+</script>
 </body>
 </html>
