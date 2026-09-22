@@ -887,9 +887,9 @@ function loadNextQuestion(){
   document.getElementById('feedback').className = '';
   document.getElementById('reteachBox').style.display = 'none';
   document.getElementById('reteachBox').innerHTML = '';
-  document.getElementById('qNumDisplay').textContent = questionsAnswered;
-  document.getElementById('qTotalDisplay').textContent = totalQuestions;
-  document.getElementById('promptEmoji').textContent = currentQ.emoji;
+  document.getElementById('qNumDisplaayy').textContent = questionsAnswered;
+ document.getElementById('qNumDisplay').textContent = questionsAnswered;
+document.getElementById('qTotalDisplay').textContent = totalQuestions;
   document.getElementById('retryBadge').style.display = currentQ.isRetry ? 'inline-block' : 'none';
   renderTrailMap();
   const labelEl = document.getElementById('roundLabel');
