@@ -880,54 +880,88 @@ function showHint(){
   speakLine('Here is a hint: ' + currentQ.hint);
 }
 function loadNextQuestion(){
-  if(questionQueue.length === 0){ showEnd(); return; }
+  if(questionQueue.length === 0){
+    showEnd();
+    return;
+  }
+
   currentQ = questionQueue.shift();
   questionsAnswered++;
+
   document.getElementById('feedback').textContent = '';
   document.getElementById('feedback').className = '';
   document.getElementById('reteachBox').style.display = 'none';
   document.getElementById('reteachBox').innerHTML = '';
-  document.getElementById('qNumDisplaayy').textContent = questionsAnswered;
+
+  document.getElementById('qNumDisplay').textContent = questionsAnswered;
   document.getElementById('qTotalDisplay').textContent = totalQuestions;
-  document.getElementById('retryBadge').style.display = currentQ.isRetry ? 'inline-block' : 'none';
+
+  document.getElementById('retryBadge').style.display =
+    currentQ.isRetry ? 'inline-block' : 'none';
+
   renderTrailMap();
+
   const labelEl = document.getElementById('roundLabel');
   const hiddenWordDisplay = document.getElementById('hidden-word-display');
   const speakBtn = document.getElementById('speakBtn');
   const hintBtn = document.getElementById('hintBtn');
   const choicesArea = document.getElementById('choicesArea');
-  const textInputArea = document.getElementById('
-    choicesArea.style.display = 'grid';
-speakBtn.style.display = 'none';
-hintBtn.style.display = 'none';
-hintBtn.disabled = false;
-hintBtn.textContent = '💡 Need a hint?';
-hintBtn.style.display = 'none';
-hintBtn.disabled = false;
-hintBtn.textContent = '💡 Need a hint?';
+  const textInputArea = document.getElementById('textInputArea');
+
+  choicesArea.style.display = 'grid';
+  textInputArea.style.display = 'none';
+  speakBtn.style.display = 'none';
+
+  hintBtn.style.display = 'none';
+  hintBtn.disabled = false;
+  hintBtn.textContent = '💡 Need a hint?';
+
   if(currentQ.type === 'phonics'){
-    labelEl.textContent = '🌿 Phonics Vines'; labelEl.style.background = '#43a047';
+    labelEl.textContent = '🌿 Phonics Vines';
+    labelEl.style.background = '#43a047';
     document.getElementById('questionText').textContent = currentQ.prompt;
-   if(selectedTier === 'easy' && currentQ.hint){
-  hintBtn.style.display = 'inline-block';
-}
+
+    if(selectedTier === 'easy' && currentQ.hint){
+      hintBtn.style.display = 'inline-block';
+    }
+
     renderChoices(currentQ.choices, currentQ.answer);
+
   } else if(currentQ.type === 'vocab'){
-    labelEl.textContent = '💧 Vocabulary Falls'; labelEl.style.background = '#0288d1';
+    labelEl.textContent = '💧 Vocabulary Falls';
+    labelEl.style.background = '#0288d1';
     document.getElementById('questionText').textContent = currentQ.prompt;
+
     renderChoices(currentQ.choices, currentQ.answer);
+
   } else if(currentQ.type === 'spelling'){
-    labelEl.textContent = '🐊 Spelling Swamp'; labelEl.style.background = '#6d4c41';
-    document.getElementById('questionText').textContent = "Listen or read the hint, then type the word:";
-    let hintText = "Hint: " + currentQ.hint;
-    if(selectedTier === 'easy'){ hintText += "  |  Word length: " + currentQ.word.length + " letters, starts with '" + currentQ.word[0].toUpperCase() + "'"; }
+    labelEl.textContent = '🐊 Spelling Swamp';
+    labelEl.style.background = '#6d4c41';
+    document.getElementById('questionText').textContent =
+      'Listen or read the hint, then type the word:';
+
+    let hintText = 'Hint: ' + currentQ.hint;
+
+    if(selectedTier === 'easy'){
+      hintText +=
+        ' | Word length: ' +
+        currentQ.word.length +
+        " letters, starts with '" +
+        currentQ.word[0].toUpperCase() +
+        "'";
+    }
+
     hiddenWordDisplay.textContent = hintText;
-    speakBtn.style.display = 'inline-block'; choicesArea.style.display = 'none'; textInputArea.style.display = 'block';
-    document.getElementById('typedAnswer').value = ''; document.getElementById('typedAnswer').focus();
+    speakBtn.style.display = 'inline-block';
+    choicesArea.style.display = 'none';
+    textInputArea.style.display = 'block';
+
+    document.getElementById('typedAnswer').value = '';
+    document.getElementById('typedAnswer').focus();
+
     setTimeout(speakWord, 400);
   }
 }
-
 function renderChoices(choices, answer){
   const choicesArea = document.getElementById('choicesArea');
   const shuffled = shuffle(choices);
