@@ -192,6 +192,26 @@
   .action-btn.big { font-size: 1.3em; padding: 16px 34px; border-radius: 18px; box-shadow: 0 6px 0 #c76a00; }
   .action-btn.big:active { box-shadow: 0 2px 0 #c76a00; transform: translateY(4px) scale(0.97); }
   #speakBtn { background: #689f38; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 0.95em; margin-bottom: 8px; }
+ #hintBtn {
+  background: #6f42c1;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: bold;
+  margin: 0 0 8px 6px;
+}
+
+#hintBtn:hover {
+  background: #5a32a3;
+}
+
+#hintBtn:disabled {
+  background: #b9a4dc;
+  cursor: default;
+}
   #feedback { margin-top: 16px; font-size: 1.05em; font-weight: bold; min-height: 28px; }
   #feedback.correct-fb { color: #2e7d32; } #feedback.wrong-fb { color: #c62828; }
   #reteachBox { display: none; background: #fff3e0; border: 2px dashed #ff8f00; border-radius: 12px; padding: 12px 16px; margin-top: 12px; text-align: left; color: #4e342e; font-size: 0.95em; font-weight: normal; }
@@ -349,6 +369,7 @@
     <div id="questionText"></div>
     <div id="hidden-word-display"></div>
     <button id="speakBtn" style="display:none;" onclick="speakWord()">🔊 Hear the word</button>
+   <button id="hintBtn" style="display:none;" onclick="showHint()">💡 Need a hint?</button>
     <div id="choicesArea" class="choices"></div>
     <div id="textInputArea" style="display:none;">
       <br><input type="text" id="typedAnswer" autocomplete="off" placeholder="Type the word...">
@@ -846,7 +867,18 @@ function speakWord(){
     const utter = new SpeechSynthesisUtterance(currentQ.word); utter.rate = 0.85; window.speechSynthesis.speak(utter);
   }
 }
+function showHint(){
+  if(!currentQ || !currentQ.hint) return;
 
+  document.getElementById('hidden-word-display').textContent =
+    '💡 Hint: ' + currentQ.hint;
+
+  const hintBtn = document.getElementById('hintBtn');
+  hintBtn.textContent = '💡 Hint shown';
+  hintBtn.disabled = true;
+
+  speakLine('Here is a hint: ' + currentQ.hint);
+}
 function loadNextQuestion(){
   if(questionQueue.length === 0){ showEnd(); return; }
   currentQ = questionQueue.shift();
@@ -863,14 +895,23 @@ function loadNextQuestion(){
   const labelEl = document.getElementById('roundLabel');
   const hiddenWordDisplay = document.getElementById('hidden-word-display');
   const speakBtn = document.getElementById('speakBtn');
+  const hintBtn = document.getElementById('hintBtn');
   const choicesArea = document.getElementById('choicesArea');
-  const textInputArea = document.getElementById('textInputArea');
-  choicesArea.innerHTML = ''; hiddenWordDisplay.textContent = ''; textInputArea.style.display = 'none';
-  choicesArea.style.display = 'grid'; speakBtn.style.display = 'none';
+  const textInputArea = document.getElementById('
+    choicesArea.style.display = 'grid';
+speakBtn.style.display = 'none';
+hintBtn.style.display = 'none';
+hintBtn.disabled = false;
+hintBtn.textContent = '💡 Need a hint?';
+hintBtn.style.display = 'none';
+hintBtn.disabled = false;
+hintBtn.textContent = '💡 Need a hint?';
   if(currentQ.type === 'phonics'){
     labelEl.textContent = '🌿 Phonics Vines'; labelEl.style.background = '#43a047';
     document.getElementById('questionText').textContent = currentQ.prompt;
-    if(selectedTier === 'easy' && currentQ.hint){ hiddenWordDisplay.textContent = "💡 " + currentQ.hint; }
+   if(selectedTier === 'easy' && currentQ.hint){
+  hintBtn.style.display = 'inline-block';
+}
     renderChoices(currentQ.choices, currentQ.answer);
   } else if(currentQ.type === 'vocab'){
     labelEl.textContent = '💧 Vocabulary Falls'; labelEl.style.background = '#0288d1';
