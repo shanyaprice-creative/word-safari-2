@@ -29,7 +29,102 @@
   }
   h1 { text-align: center; color: #33691e; margin-top: 0; font-size: 1.8em; }
   #subtitle { text-align: center; color: #558b2f; margin-bottom: 20px; font-size: 0.95em; }
+/* Modern Word Safari banner */
+#modernBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -12px -12px 22px -12px;
+  padding: 15px 18px;
+  background: linear-gradient(135deg, #123c2b 0%, #1f6b4f 55%, #2f8a65 100%);
+  border-radius: 18px;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(18, 60, 43, 0.25);
+}
 
+.banner-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.banner-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.16);
+  font-size: 1.6em;
+}
+
+.banner-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.16em;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  line-height: 1.1;
+}
+
+.banner-subtitle {
+  margin-top: 4px;
+  color: #d5f5e3;
+  font-size: 0.73em;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+#muteToggle {
+  margin-left: 0;
+  white-space: nowrap;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.13);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-size: 0.78em;
+  font-weight: 700;
+}
+
+#muteToggle:hover {
+  background: rgba(255,255,255,0.24);
+}
+
+#muteToggle.muted {
+  border-color: rgba(255,255,255,0.4);
+  color: #e7e7e7;
+  background: rgba(0,0,0,0.18);
+}
+
+@media (max-width: 470px) {
+  #modernBanner {
+    padding: 12px;
+  }
+
+  .banner-title {
+    font-size: 1em;
+  }
+
+  .banner-subtitle {
+    display: none;
+  }
+
+  .banner-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.4em;
+  }
+
+  #muteToggle {
+    padding: 7px 8px;
+    font-size: 0.7em;
+  }
+}
   /* ===== Animated intro canopy ===== */
   #introCanopy {
     position: relative; height: 130px; margin: -10px -10px 10px -10px; border-radius: 18px;
@@ -159,10 +254,16 @@
 </head>
 <body>
 <div id="game">
-  <div class="vine">🦁🌴🐘 &nbsp; Word Wizard: Jungle Safari Adventure &nbsp; 🐘🌴🦁
-    <button id="muteToggle" onclick="toggleMute()">🔊 Voices On</button>
+ <div id="modernBanner">
+  <div class="banner-brand">
+    <div class="banner-icon">🦜</div>
+    <div>
+      <div class="banner-title">Word Safari</div>
+      <div class="banner-subtitle">Jungle Learning Adventure</div>
+    </div>
   </div>
-
+  <button id="muteToggle" onclick="toggleMute()">🔊 Voices On</button>
+</div>
   <div id="nameScreen">
     <div id="introCanopy">
       <span class="sun">☀️</span>
